@@ -13,7 +13,7 @@ def guardar_puntaje(nombre, puntaje, archivo="data/puntajes.txt"):
     Sin salida.
     
     """
-    with open(archivo, "w+") as puntajes_file:
+    with open(archivo, "a") as puntajes_file:
         puntajes_file.write(f"{nombre},{puntaje}\n")
 
 def cargar_puntajes(archivo="data/puntajes.txt"):

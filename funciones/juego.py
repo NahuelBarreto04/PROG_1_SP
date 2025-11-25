@@ -139,14 +139,11 @@ def iniciar_juego_sudoku(pantalla, estado_juego: dict) -> None:
     filas, columnas = 9, 9
     dificultad = get_dificultad_actual()
 
-    #Generar sudoku completo 
     sudoku_completo = generar_sudoku_completo()
     mostrar_tablero(sudoku_completo)
 
-    #Aplicar dificultad por región 
     puzzle = aplicar_dificultad_por_region(sudoku_completo, dificultad)
 
-    # Genera la estructura del tablero
     tablero = generar_tablero_sudoku(filas, columnas)
 
     for f in range(9):
@@ -211,7 +208,7 @@ def validar_numero(tablero: list, fila: int, columna: int, numero:int) -> bool:
     return valido 
 
 
-def dibujar_tablero_sudoku(pantalla, estado_juego):
+def dibujar_tablero_sudoku(pantalla, estado_juego:dict) -> None:
     """
     Funcion para dibujar el tablero de sudoku en pantalla
 
@@ -259,26 +256,26 @@ def dibujar_tablero_sudoku(pantalla, estado_juego):
                      rect.y + (tam - texto.get_height()) // 2)
                 )
 
-            # 🔲 3. Bordes finos entre celdas
+            # Bordes finos entre celdas
             pygame.draw.rect(pantalla, COLORES["linea"], rect, 1)
 
     for i in range(10):
         y = offset_y + i * tam
         x = offset_x + i * tam
 
-        # Línea gruesa cada 3 celdas
+        #Linea gruesa cada 3 celdas
         if i in (0, 3, 6, 9):
             grosor = 3
         else:
             grosor = 1
 
-        # Horizontal
+        #Horizontal
         pygame.draw.line(
             pantalla, COLORES["linea_gruesa"],
             (offset_x, y), (offset_x + 9*tam, y), grosor
         )
 
-        # Vertical
+        #Vertical
         pygame.draw.line(
             pantalla, COLORES["linea_gruesa"],
             (x, offset_y), (x, offset_y + 9*tam), grosor
@@ -352,6 +349,9 @@ def manejar_eventos_sudoku(evento, estado_juego):
                         validar_puntaje(fila_sel, col_sel, numero, estado_juego, celda)
                         revalidar_celdas_no_validas(estado_juego)
                         
+                        if not validar_numero(tablero, fila_sel, col_sel, numero):
+                            sonidos["no_valido"].play()
+
                         if verificar_region_completa(tablero, fila_sel, col_sel):
                             sonidos["valido"].play()
                         
@@ -372,6 +372,14 @@ def manejar_eventos_sudoku(evento, estado_juego):
 
 
 def revalidar_celdas_no_validas(estado_juego:dict) -> None:
+    """
+    Revalida todas las celdas marcadas como no válidas en el tablero.
+    ENTRADA:
+    estado_juego: dict, estado actual del juego
+    SALIDA:
+    none, solo modifica el estado del juego
+    """
+    
     tablero = estado_juego["tablero"]
 
     for f in range(9):
@@ -396,6 +404,12 @@ def dibujar_boton_reinicio(pantalla, fuente: pygame.font.Font) -> pygame.Rect:
     """
     Muestra el texto 'Reinicio' con un pequeño fondo detrás.
     Retorna el rect del fondo para detectar clics.
+    ENTRADA:
+    pantalla: pygame, donde se dibuja el texto
+    fuente: pygame.font.Font, fuente para el texto
+    SALIDA:
+    pygame.Rect: rectángulo del botón de reinicio
+
     """
     fuente = pygame.font.SysFont("arial", pantalla.get_height() // 22)
     texto = fuente.render("Reiniciar", True, (255, 255, 255))
@@ -418,7 +432,6 @@ def dibujar_boton_reinicio(pantalla, fuente: pygame.font.Font) -> pygame.Rect:
 
     pygame.draw.rect(pantalla, (50, 50, 50), rect_fondo)
 
-    # Dibujar texto
     pantalla.blit(texto, rect_texto)
 
     return rect_fondo
@@ -426,14 +439,12 @@ def dibujar_boton_reinicio(pantalla, fuente: pygame.font.Font) -> pygame.Rect:
 def controlar_boton_reinicio(evento, rect_reinicio, estado_juego:dict)-> None:
     """
     detecta si el jugador toca el boton de reinicio
-    retorna true si el juego es reiniciado
-    false si no pasa nada
     ENTRADa:
-    evento: pygame, el evento actual del mouse
+    evento: pygame, el evento actual
     rect_reinicio:pygame , rectangulo que define el area del boton de reiniciar
     estado_juego:dict, estado actual del juego
     SALIDA:
-    BOOL -> true si reinicia, false si no
+    sin salida, solo modifica el estado del juego
     """
     if evento is not None and evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
         if rect_reinicio.collidepoint(evento.pos):
@@ -448,6 +459,8 @@ def resetear_juego(estado_juego:dict)-> None:
 
     ENTRADA:
     estado_juego: diccionario 
+    SALIDA:
+    none, solo modifica el estado del juego
     """
     estado_juego["juego_iniciado"] = False
     estado_juego["gano"] = False
@@ -569,10 +582,6 @@ def pedir_nombre(pantalla) -> str:
         pygame.display.update()
 
         for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_RETURN:
                     if nombre != "":
